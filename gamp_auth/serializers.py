@@ -1,11 +1,32 @@
 from rest_framework import serializers
 from .models import User
+import random
+import string
 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'mobile_no', 'is_active', 'is_staff', 'is_superuser']
+        fields = ['id', 'email', 'mobile_no', 'is_active', 'is_blocked']
+
+
+class UserRegistrationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['mobile_no', 'email']
+
+    def create(self, validated_data):
+        password = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
+
+        user = User.objects.create_user(
+            mobile_no=validated_data['mobile_no'],
+            email=validated_data['email'],
+            password=password
+        )
+        user.set_password(password)
+        user.save()
+
+        return user
 
 
 class OTPSendSerializer(serializers.Serializer):

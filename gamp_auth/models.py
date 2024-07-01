@@ -1,5 +1,5 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator, validate_email
 from django.db import models
 from django.utils import timezone
 import random
@@ -41,7 +41,7 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser):
-    email = models.EmailField(unique=True, null=True, blank=True)
+    email = models.EmailField(unique=True, null=True, blank=True, validators=[validate_email])
     mobile_no = models.CharField(
         max_length=15,
         unique=True,
@@ -82,8 +82,8 @@ class OTP(models.Model):
 
     def set_otp_in_redis(self):
         r = redis.StrictRedis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB)
-        r.setex(f'otp:{self.otp}', 300, self.user.id)
+        r.setex(f'otp:{self.otp}', 120, self.user.id)
         r.publish(settings.REDIS_OTP_CHANNEL, self.otp)
 
     def is_valid(self):
-        return not self.is_used and (timezone.now() - self.created_at).seconds < 300
+        return not self.is_used and (timezone.now() - self.created_at).seconds < 120

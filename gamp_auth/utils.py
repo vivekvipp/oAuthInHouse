@@ -6,6 +6,12 @@ from .models import OTP
 
 
 def send_otp_via_sns(mobile_no, otp):
+    # TODO: Load fixtures for getting indian numbers
+    indian_prefix = "+91"
+    if mobile_no.startswith("+91"):
+        pass
+    else:
+        mobile_no = indian_prefix + mobile_no
     sns_client = boto3.client(
         'sns',
         aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
@@ -15,7 +21,7 @@ def send_otp_via_sns(mobile_no, otp):
 
     response = sns_client.publish(
         PhoneNumber=mobile_no,
-        Message=f'Your OTP code is {otp}'
+        Message=f'Your gamp one time passcode is {otp}'
     )
     return response
 

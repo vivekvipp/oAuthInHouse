@@ -1,19 +1,37 @@
 from django.conf import settings
 from django.contrib.auth import login
 from rest_framework import status, permissions
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.response import Response
 from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import AccessToken
+import logging
 
 from .models import User, OTP
-from .serializers import OTPSendSerializer, OTPVerifySerializer, UserSerializer
+from .serializers import OTPSendSerializer, OTPVerifySerializer, UserSerializer, UserRegistrationSerializer
 from .utils import send_otp_via_sns, verify_otp_code, get_tokens_for_user
 
 MAX_INCORRECT_ATTEMPTS = settings.MAX_INCORRECT_ATTEMPTS
 
+logger = logging.getLogger(__file__)
+
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
+def register_user(request):
+    serializer = UserRegistrationSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({'message': 'User registered successfully'}, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([AllowAny])
 def generate_otp(request):
     serializer = OTPSendSerializer(data=request.data)
     if serializer.is_valid():
@@ -37,13 +55,15 @@ def generate_otp(request):
         # Send OTP via SNS
         if mobile_no:
             response = send_otp_via_sns(mobile_no, otp.otp)
-            print(f'Sending OTP {otp.otp} to mobile {mobile_no}, SNS Response: {response}')
+            logger.info(f'Sending OTP {otp.otp} to mobile {mobile_no}, SNS Response: {response}')
 
         return Response({'message': 'OTP sent'}, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@csrf_exempt
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def verify_otp(request):
     serializer = OTPVerifySerializer(data=request.data)
     if serializer.is_valid():
@@ -74,24 +94,38 @@ def verify_otp(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@csrf_exempt
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
+@authentication_classes([JWTAuthentication])
 def get_user_details(request):
     user = request.user
     serializer = UserSerializer(user)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
+@csrf_exempt
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+# Disable authentication for this view
+@authentication_classes([])
 def verify_access_token(request):
-    token = request.data.get('token')
-    if not token:
-        return Response({'error': 'Token is required'}, status=status.HTTP_400_BAD_REQUEST)
+    logger.debug("Entered verify_access_token view")
+    auth_header = request.headers.get('Authorization')
+    logger.debug(f"Authorization header: {auth_header}")
+
+    if not auth_header or not auth_header.startswith('Bearer '):
+        logger.error("Authorization header with Bearer token is required")
+        return Response({'error': 'Authorization header with Bearer token is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    token = auth_header.split(' ')[1]
+    logger.debug(f"Extracted token: {token}")
 
     try:
         # Decode the token to check its validity
         AccessToken(token)
+        logger.debug("Token is valid")
         return Response({'message': 'Token is valid'}, status=status.HTTP_200_OK)
     except TokenError as e:
-        return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        logger.error(f"Token error: {str(e)}")
+        return Response({'error': 'Token is invalid or expired'}, status=status.HTTP_400_BAD_REQUEST)

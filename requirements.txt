@@ -30,3 +30,4 @@ urllib3==1.26.19
 vine==5.1.0
 wcwidth==0.2.13
 gunicorn==21.2.0
+psycopg2

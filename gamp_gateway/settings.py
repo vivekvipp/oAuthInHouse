@@ -12,22 +12,25 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from decouple import config
 from pathlib import Path
 from datetime import timedelta
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
-
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-g_#f%5q15jzj2)9x9&@a2ws3=$u-ty_!%t+wx992lftoqyqd2g'
+SECRET_KEY = config('SECRET_KEY', default='gamp_auth')
+ENVIRONMENT = os.environ.get('DJANGO_ENVIRONMENT', 'local')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG_FLAG = config('DEBUG', default=True)
+if DEBUG_FLAG == 'FALSE':
+    DEBUG = False
+else:
+    DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
 
+AUTH_USER_MODEL = 'gamp_auth.User'
 
 # Application definition
 
@@ -44,7 +47,7 @@ INSTALLED_APPS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework_simplejwt.authentication.JWTStatelessUserAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -59,6 +62,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'gamp_auth.middleware.LogRequestsMiddleware',
 ]
 
 ROOT_URLCONF = 'gamp_gateway.urls'
@@ -81,7 +85,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'gamp_gateway.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
@@ -92,34 +95,23 @@ DATABASES = {
     }
 }
 
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ],
-}
-
-
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.gamp_auth.password_validation.UserAttributeSimilarityValidator',
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
     },
     {
-        'NAME': 'django.contrib.gamp_auth.password_validation.MinimumLengthValidator',
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
     },
     {
-        'NAME': 'django.contrib.gamp_auth.password_validation.CommonPasswordValidator',
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
     },
     {
-        'NAME': 'django.contrib.gamp_auth.password_validation.NumericPasswordValidator',
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
@@ -132,7 +124,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
@@ -143,51 +134,67 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
 CELERY_BROKER_URL = config('CELERY_BROKER_URL', default='redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default='redis://localhost:6379/0')
-CELERY_BEAT_SCHEDULE_TIME = config('CELERY_BEAT_SCHEDULE_TIME', default=300.0, cast=float)
+CELERY_BEAT_SCHEDULE_TIME = config('CELERY_BEAT_SCHEDULE_TIME', default=120.0, cast=float)
 CELERY_TIMEZONE = config('CELERY_TIMEZONE', default='UTC')
 
 CELERY_BEAT_SCHEDULE = {
     'mark_otp_inactive': {
         'task': 'gamp_auth.tasks.mark_expired_otps_inactive',
-        'schedule': CELERY_BEAT_SCHEDULE_TIME,  # Run every 5 minutes
+        'schedule': CELERY_BEAT_SCHEDULE_TIME,  # Run every 2 minutes
     },
 }
+# Redis settings for Pub/Sub
+REDIS_HOST = config('REDIS_HOST', default=os.environ.get('REDIS_HOST'))
+REDIS_PORT = config('REDIS_PORT', default=os.environ.get('REDIS_PORT'), cast=int)
+REDIS_DB = config('REDIS_DB', default=os.environ.get('REDIS_DB'), cast=int)
+REDIS_OTP_CHANNEL = config('REDIS_OTP_CHANNEL', default=os.environ.get('REDIS_OTP_CHANNEL'))
 
-REDIS_CACHE_URL = config('REDIS_CACHE_URL', default='redis://127.0.0.1:6379/1')
+
+# Redis settings for caching
+def _create_redis_cache_url():
+    return f'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
+
 
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": REDIS_CACHE_URL,
+        "LOCATION": _create_redis_cache_url(),
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
     }
 }
 
-# Redis settings for Pub/Sub
-REDIS_HOST = config('REDIS_HOST', default='127.0.0.1')
-REDIS_PORT = config('REDIS_PORT', default=6379, cast=int)
-REDIS_DB = config('REDIS_DB', default=0, cast=int)
-REDIS_OTP_CHANNEL = config('REDIS_OTP_CHANNEL', default='otp_channel')
-
 MAX_INCORRECT_ATTEMPTS = config('MAX_INCORRECT_ATTEMPTS', 4)
-
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-    'ROTATE_REFRESH_TOKENS': True,
+    'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,
     'ALGORITHM': 'HS256',
-    'SIGNING_KEY': config('SECRET_KEY', default='sandj13123123821398@&(Y#(&'),
+    'SIGNING_KEY': SECRET_KEY,
     'VERIFYING_KEY': None,
+    'AUDIENCE': None,
+    'ISSUER': None,
     'AUTH_HEADER_TYPES': ('Bearer',),
     'USER_ID_FIELD': 'id',
     'USER_ID_CLAIM': 'user_id',
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
     'TOKEN_TYPE_CLAIM': 'token_type',
 }
+
+# SNS RELATED Settings
+
+AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID', default=os.environ.get('AWS_ACCESS_KEY_ID'))
+AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY', default=os.environ.get('AWS_SECRET_ACCESS_KEY'))
+AWS_REGION_NAME = config('AWS_REGION_NAME', 'ap-south-1')
+
+if ENVIRONMENT == 'production':
+    from .production_settings import *
+elif ENVIRONMENT == 'development':
+    from .development_settings import *
+elif ENVIRONMENT == 'staging':
+    from .staging_settings import *
