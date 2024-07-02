@@ -9,12 +9,24 @@ ENV PYTHONUNBUFFERED 1
 WORKDIR /code
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+#RUN apt-get update && apt-get install -y \
     netcat \
     postgresql-client \
     build-essential \
     libpq-dev \
     && apt-get clean
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    postgresql-client \
+    build-essential \
+    libpq-dev \
+    busybox-static \
+    && apt-get clean
+
+# Create symlink for busybox-netcat
+RUN ln -s /bin/busybox /bin/nc
+
 
 COPY requirements.txt /code/
 RUN pip install --upgrade pip
