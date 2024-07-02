@@ -10,11 +10,11 @@ WORKDIR /code
 
 # Install system dependencies
 #RUN apt-get update && apt-get install -y \
-    netcat \
-    postgresql-client \
-    build-essential \
-    libpq-dev \
-    && apt-get clean
+    #netcat \
+    #postgresql-client \
+    #build-essential \
+    #libpq-dev \
+    #&& apt-get clean
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
