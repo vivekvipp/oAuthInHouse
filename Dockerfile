@@ -33,6 +33,7 @@ RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
 COPY . /code/
+RUN mkdir /code/staticfiles
 
 COPY ./entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
