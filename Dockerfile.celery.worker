@@ -9,12 +9,26 @@ ENV PYTHONUNBUFFERED 1
 WORKDIR /code
 
 # Install system dependencies
+#RUN apt-get update && apt-get install -y \
+ #   netcat \
+  #  postgresql-client \
+   # build-essential \
+    #libpq-dev \
+    #&& apt-get clean
+
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    netcat \
     postgresql-client \
     build-essential \
     libpq-dev \
+    busybox-static \
     && apt-get clean
+
+# Create symlink for busybox-netcat
+RUN ln -s /bin/busybox /bin/nc
+
+
+
 
 COPY requirements.txt /code/
 RUN pip install --upgrade pip
@@ -24,7 +38,7 @@ COPY . /code/
 RUN mkdir /code/staticfiles
 
 
-COPY ./entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+COPY ./entrypoint-celery-worker.sh /entrypoint-celery-worker.sh
+RUN chmod +x /entrypoint-celery-worker.sh
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/entrypoint-celery-worker.sh"]
