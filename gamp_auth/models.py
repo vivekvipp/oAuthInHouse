@@ -3,7 +3,7 @@ from django.core.validators import RegexValidator, validate_email
 from django.db import models
 from django.utils import timezone
 import random
-from redis_connection import RedisConnection
+from .redis_connection import RedisConnection
 from django.conf import settings
 
 

@@ -2,7 +2,7 @@ import boto3
 from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import OTP
-from redis_connection import RedisConnection
+from .redis_connection import RedisConnection
 
 
 def send_otp_via_sns(mobile_no, otp):
