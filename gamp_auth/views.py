@@ -9,6 +9,7 @@ from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import AccessToken
 import logging
+import traceback
 
 from .models import User, OTP
 from .serializers import OTPSendSerializer, OTPVerifySerializer, UserSerializer, UserRegistrationSerializer
@@ -158,5 +159,6 @@ def verify_access_token(request):
     except (InvalidToken, TokenError) as e:
         logger.error(f"Invalid token: {str(e)}")
         # get traceback
-        logger.debug(e.with_traceback())
+        tb = traceback.format_exc()
+        logger.info(tb)
         return Response({'error': 'Token is invalid or expired'}, status=status.HTTP_401_UNAUTHORIZED)
