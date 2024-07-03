@@ -23,7 +23,7 @@ logger = logging.getLogger(__file__)
 @permission_classes([AllowAny])
 def register_user(request):
     serializer = UserRegistrationSerializer(data=request.data)
-    if serializer.is_valid(raise_exception=True):
+    if serializer.is_valid():
         serializer.save()
         return Response({'message': 'User registered successfully'}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -34,7 +34,7 @@ def register_user(request):
 @authentication_classes([])
 def generate_otp(request):
     serializer = OTPSendSerializer(data=request.data)
-    if serializer.is_valid(raise_exception=True):
+    if serializer.is_valid():
         email = serializer.validated_data.get('email')
         if email:
             email = email.lower()
@@ -77,7 +77,7 @@ def generate_otp(request):
 @authentication_classes([])
 def verify_otp(request):
     serializer = OTPVerifySerializer(data=request.data)
-    if serializer.is_valid(raise_exception=True):
+    if serializer.is_valid():
         email = serializer.validated_data.get('email')
         if email:
             email = email.lower()

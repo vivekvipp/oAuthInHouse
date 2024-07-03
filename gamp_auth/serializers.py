@@ -34,7 +34,8 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
                                                                                              and User.objects.filter(
                     mobile_no=data.get('mobile_no')).exists()):
             raise ValidationError("A user with either this email or mobile no already exists.")
-
+        if data.keys() not in ['email', 'mobile_no']:
+            raise ValidationError("No extra fields are allowed.")
         return data
 
     def create(self, validated_data):
