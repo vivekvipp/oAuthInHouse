@@ -204,7 +204,7 @@ AWS_SES_REGION_NAME = AWS_REGION_NAME
 AWS_SES_REGION_ENDPOINT = f'email.{AWS_REGION_NAME}.amazonaws.com'
 
 
-DISCORD_URL = config('DISCORD_URL', default=os.environ.get('DISCORD_URL'))
+DISCORD_URL = config('REJOIN_TRAIL_URL', default=os.environ.get('REJOIN_TRAIL_URL', 'https://discord.gg/gamp'))
 
 if ENVIRONMENT == 'production':
     from .production_settings import *
