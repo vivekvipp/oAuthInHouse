@@ -48,6 +48,10 @@ def generate_otp(request):
             return Response({'error': 'User is blocked due to multiple incorrect OTP attempts'},
                             status=status.HTTP_403_FORBIDDEN)
 
+        latest_otp = OTP.objects.filter(user=user, is_used=False).first()
+        if latest_otp.is_valid():
+            return Response({'error': 'Previous OTP is still valid'}, status=status.HTTP_400_BAD_REQUEST)
+
         OTP.objects.filter(user=user, is_used=False).update(is_used=True)  # Invalidate old OTPs
 
         otp = OTP.objects.create(user=user)
