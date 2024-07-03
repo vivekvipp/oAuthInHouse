@@ -29,9 +29,9 @@ def register_user(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@authentication_classes([])
 def generate_otp(request):
     serializer = OTPSendSerializer(data=request.data)
     if serializer.is_valid():
@@ -61,9 +61,9 @@ def generate_otp(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@authentication_classes([])
 def verify_otp(request):
     serializer = OTPVerifySerializer(data=request.data)
     if serializer.is_valid():
@@ -94,7 +94,6 @@ def verify_otp(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@csrf_exempt
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 @authentication_classes([JWTAuthentication])
@@ -104,7 +103,6 @@ def get_user_details(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@csrf_exempt
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 # Disable authentication for this view
