@@ -157,4 +157,4 @@ def verify_access_token(request):
         return Response({'message': 'Token is valid', 'data': user_serialized_data}, status=status.HTTP_200_OK)
     except TokenError as e:
         logger.error(f"Token error: {str(e)}")
-        return Response({'error': 'Token is invalid or expired'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'Token is invalid or expired'}, status=status.HTTP_401_UNAUTHORIZED)
