@@ -22,10 +22,18 @@ logger = logging.getLogger(__file__)
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register_user(request):
+    data = request.data
+    allowed_fields = {'email', 'mobile_no'}
+
+    # Check for extra fields
+    extra_fields = set(data.keys()) - allowed_fields
+    if extra_fields:
+        return Response({"error": f"No extra fields are allowed: {', '.join(extra_fields)}"},
+                        status=status.HTTP_400_BAD_REQUEST)
     serializer = UserRegistrationSerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save()
-        return Response({'message': 'User registered successfully'}, status=status.HTTP_201_CREATED)
+        user = serializer.save()
+        return Response({'message': 'User registered successfully', 'user_id': user.id}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -129,7 +137,8 @@ def verify_access_token(request):
 
     if not auth_header or not auth_header.startswith('Bearer '):
         logger.error("Authorization header with Bearer token is required")
-        return Response({'error': 'Authorization header with Bearer token is required'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'Authorization header with Bearer token is required'},
+                        status=status.HTTP_400_BAD_REQUEST)
 
     token = auth_header.split(' ')[1]
     logger.debug(f"Extracted token: {token}")

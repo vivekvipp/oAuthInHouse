@@ -30,14 +30,14 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if not data.get('email') and not data.get('mobile_no'):
             raise ValidationError("At least one of email or mobile_no must be provided.")
-        if (data.get('email') and User.objects.filter(email=data.get('email')).exists()) or (data.get('mobile_no')
-                                                                                             and User.objects.filter(
-                    mobile_no=data.get('mobile_no')).exists()):
-            raise ValidationError("A user with either this email or mobile no already exists.")
-        allowed_fields = {'email', 'mobile_no'}
 
-        if not set(data.keys()).issubset(allowed_fields):
-            raise ValidationError("No extra fields are allowed.")
+        if data.get('email') and User.objects.filter(email=data.get('email')).exists():
+            raise ValidationError("A user with this email already exists.")
+
+        if data.get('mobile_no') and User.objects.filter(mobile_no=data.get('mobile_no')).exists():
+            raise ValidationError("A user with this mobile number already exists.")
+
+        return data
 
     def create(self, validated_data):
         password = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
