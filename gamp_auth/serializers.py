@@ -1,7 +1,10 @@
 from rest_framework import serializers
+from django.core.exceptions import ValidationError
+from django.core.validators import EmailValidator
 from .models import User
 import random
 import string
+import re
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -10,7 +13,16 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'email', 'mobile_no', 'is_active', 'is_blocked']
 
 
+def validate_mobile_no(value):
+    if not re.match(r'^\+91\d{10}$', value):
+        raise ValidationError("Mobile number must be in the format +91 followed by 10 digits.")
+    return value
+
+
 class UserRegistrationSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(validators=[EmailValidator()])
+    mobile_no = serializers.CharField(validators=[validate_mobile_no])
+
     class Meta:
         model = User
         fields = ['mobile_no', 'email']
