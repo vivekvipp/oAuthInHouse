@@ -5,7 +5,7 @@ from rest_framework.permissions import AllowAny
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.response import Response
-from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import AccessToken
 import logging
@@ -155,6 +155,9 @@ def verify_access_token(request):
         user_serialized_data = UserSerializer(user).data
         logger.debug("Token is valid")
         return Response({'message': 'Token is valid', 'data': user_serialized_data}, status=status.HTTP_200_OK)
+    except InvalidToken as e:
+        logger.error(f"Invalid token: {str(e)}")
+        return Response({'error': 'Token is invalid or expired'}, status=status.HTTP_401_UNAUTHORIZED)
     except TokenError as e:
         logger.error(f"Token error: {str(e)}")
-        return Response({'error': 'Token is invalid or expired'}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response({'error': 'Token is invalid or expired'}, status=status.HTTP_400_BAD_REQUEST)
