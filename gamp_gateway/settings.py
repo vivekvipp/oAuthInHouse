@@ -151,14 +151,16 @@ REDIS_PORT = config('REDIS_PORT', default=os.environ.get('REDIS_PORT'), cast=int
 REDIS_DB = config('REDIS_DB', default=os.environ.get('REDIS_DB'), cast=int)
 REDIS_OTP_CHANNEL = config('REDIS_OTP_CHANNEL', default=os.environ.get('REDIS_OTP_CHANNEL'))
 REDIS_PASSWORD = config('REDIS_PASSWORD', default=os.environ.get('REDIS_PASSWORD'))
+REDIS_TLS = config('REDIS_TLS', default=os.environ.get('REDIS_TLS'))
 
 
 # Redis settings for caching
 def _create_redis_cache_url():
+    scheme = 'rediss' if REDIS_TLS else 'redis'
     if REDIS_PASSWORD:
-        return f'rediss://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
+        return f'{scheme}://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
     else:
-        return f'rediss://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
+        return f'{scheme}://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
 
 
 CACHES = {

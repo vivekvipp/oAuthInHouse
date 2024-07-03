@@ -13,13 +13,13 @@ logger.addHandler(handler)
 
 class RedisConnection(object):
     def __init__(self):
-        connection_params = {
-            'host': settings.REDIS_HOST,
-            'port': settings.REDIS_PORT,
-            'db': settings.REDIS_DB,
-            'ssl': True,
-            'ssl_cert_reqs': None
-        }
+        connection_params = {}
+        connection_params['host'] = settings.REDIS_HOST,
+        connection_params['port'] = settings.REDIS_PORT,
+        connection_params['db'] = settings.REDIS_DB
+        if hasattr(settings, 'REDIS_TLS') or not settings.REDIS_TLS:
+            connection_params['ssl_cert_reqs'] = None
+            connection_params['ssl'] = True
 
         if hasattr(settings, 'REDIS_PASSWORD') and settings.REDIS_PASSWORD:
             connection_params['password'] = settings.REDIS_PASSWORD
