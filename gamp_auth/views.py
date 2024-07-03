@@ -36,6 +36,8 @@ def generate_otp(request):
     serializer = OTPSendSerializer(data=request.data)
     if serializer.is_valid():
         email = serializer.validated_data.get('email')
+        if email:
+            email = email.lower()
         mobile_no = serializer.validated_data.get('mobile_no')
         user = None
 
@@ -77,6 +79,8 @@ def verify_otp(request):
     serializer = OTPVerifySerializer(data=request.data)
     if serializer.is_valid():
         email = serializer.validated_data.get('email')
+        if email:
+            email = email.lower()
         mobile_no = serializer.validated_data.get('mobile_no')
         otp_code = serializer.validated_data['otp']
         user = None

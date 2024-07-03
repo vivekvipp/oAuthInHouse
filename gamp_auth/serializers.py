@@ -40,9 +40,13 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         password = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
 
+        email = validated_data.get('email')
+        if email:
+            email = email.lower()
+
         user = User.objects.create_user(
             mobile_no=validated_data.get('mobile_no'),
-            email=validated_data.get('email'),
+            email=email,
             password=password
         )
         user.set_password(password)
