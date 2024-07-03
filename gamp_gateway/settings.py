@@ -21,17 +21,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY', default='gamp_auth')
 ENVIRONMENT = os.environ.get('DJANGO_ENVIRONMENT', 'local')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG_FLAG = config('DEBUG', default=True)
-# if DEBUG_FLAG == 'FALSE':
-#     DEBUG = False
-# else:
-#     DEBUG = True
+DEBUG_FLAG = config('DEBUG', default=True)
+if DEBUG_FLAG == 'FALSE':
+    DEBUG = False
+else:
+    DEBUG = True
 
-# ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',')
-
-DEBUG = True
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',')
 
 AUTH_USER_MODEL = 'gamp_auth.User'
 

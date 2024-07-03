@@ -21,4 +21,4 @@ python manage.py collectstatic --noinput
 
 
 # Start the server
-python manage.py runserver 0.0.0.0:8000
+gunicorn gamp_gateway.wsgi:application --bind 0.0.0.0:8000 --workers 3 --threads 2 --timeout 60 --log-level=info
