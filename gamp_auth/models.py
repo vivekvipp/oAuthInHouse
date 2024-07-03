@@ -61,6 +61,7 @@ class User(AbstractBaseUser):
     is_superuser = models.BooleanField(default=False)
     incorrect_otp_attempts = models.IntegerField(default=0)
     is_blocked = models.BooleanField(default=False)
+    old_id = models.CharField(max_length=50, null=True, blank=True)
 
     objects = UserManager()
 
