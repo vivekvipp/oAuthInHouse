@@ -17,7 +17,7 @@ class RedisConnection(object):
         connection_params['host'] = settings.REDIS_HOST,
         connection_params['port'] = settings.REDIS_PORT,
         connection_params['db'] = settings.REDIS_DB
-        if hasattr(settings, 'REDIS_TLS') or not settings.REDIS_TLS:
+        if hasattr(settings, 'REDIS_TLS') and settings.REDIS_TLS:
             connection_params['ssl_cert_reqs'] = None
             connection_params['ssl'] = True
 
