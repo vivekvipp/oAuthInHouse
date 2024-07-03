@@ -50,7 +50,7 @@ def generate_otp(request):
 
         latest_otps = OTP.objects.filter(user=user, is_used=False).order_by('-created_at')
         if latest_otps.count() > 1:
-            latest_otp = latest_otps.order_by('-created_at').first()
+            latest_otp = latest_otps.first()
             if latest_otp.is_valid():
                 return Response({'error': 'Previous OTP is still valid'}, status=status.HTTP_400_BAD_REQUEST)
 
