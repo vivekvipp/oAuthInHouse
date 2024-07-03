@@ -49,7 +49,7 @@ def generate_otp(request):
                             status=status.HTTP_403_FORBIDDEN)
 
         latest_otp = OTP.objects.filter(user=user, is_used=False)
-        if latest_otp.exists() and latest_otp.count() > 1:
+        if latest_otp.count() > 1:
             latest_otp = latest_otp.order_by('-created_at').first()
             if latest_otp.is_valid():
                 return Response({'error': 'Previous OTP is still valid'}, status=status.HTTP_400_BAD_REQUEST)
