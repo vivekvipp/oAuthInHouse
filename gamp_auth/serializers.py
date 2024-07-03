@@ -20,8 +20,8 @@ def validate_mobile_no(value):
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(validators=[EmailValidator()])
-    mobile_no = serializers.CharField(validators=[validate_mobile_no])
+    email = serializers.EmailField(required=False, validators=[EmailValidator()])
+    mobile_no = serializers.CharField(required=False, validators=[validate_mobile_no])
 
     class Meta:
         model = User
