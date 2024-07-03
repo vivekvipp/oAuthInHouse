@@ -3,7 +3,7 @@ from django.core.validators import RegexValidator, validate_email
 from django.db import models
 from django.utils import timezone
 import random
-import redis
+from redis_connection import RedisConnection
 from django.conf import settings
 
 
@@ -81,7 +81,7 @@ class OTP(models.Model):
         self.set_otp_in_redis()
 
     def set_otp_in_redis(self):
-        r = redis.StrictRedis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB)
+        r = RedisConnection().get_redis_connection()
         r.setex(f'otp:{self.otp}', 120, self.user.id)
         r.publish(settings.REDIS_OTP_CHANNEL, self.otp)
 

@@ -1,8 +1,8 @@
 import boto3
 from django.conf import settings
-import redis
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import OTP
+from redis_connection import RedisConnection
 
 
 def send_otp_via_sns(mobile_no, otp):
@@ -27,7 +27,7 @@ def send_otp_via_sns(mobile_no, otp):
 
 
 def verify_otp_code(user, otp_code):
-    r = redis.StrictRedis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB)
+    r = RedisConnection().get_redis_connection()
     stored_user_id = r.get(f'otp:{otp_code}')
 
     if stored_user_id and int(stored_user_id) == user.id:
