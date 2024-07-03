@@ -28,7 +28,7 @@ if DEBUG_FLAG == 'FALSE':
 else:
     DEBUG = True
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',')
 
 AUTH_USER_MODEL = 'gamp_auth.User'
 
