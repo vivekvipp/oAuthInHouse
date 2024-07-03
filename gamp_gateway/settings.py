@@ -155,7 +155,10 @@ REDIS_PASSWORD = config('REDIS_PASSWORD', default=os.environ.get('REDIS_PASSWORD
 
 # Redis settings for caching
 def _create_redis_cache_url():
-    return f'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
+    if REDIS_PASSWORD:
+        return f'redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
+    else:
+        return f'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}'
 
 
 CACHES = {
