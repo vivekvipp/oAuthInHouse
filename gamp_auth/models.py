@@ -3,6 +3,7 @@ from django.core.validators import RegexValidator, validate_email
 from django.db import models
 from django.utils import timezone
 import random
+import uuid
 from .redis_connection import RedisConnection
 from django.conf import settings
 import logging
@@ -38,7 +39,7 @@ class UserManager(BaseUserManager):
     @staticmethod
     def create_username():
         while True:
-            username = f'user{random.randint(1000, 9999)}'
+            username = str(uuid.uuid4())
             if not User.objects.filter(username=username).exists():
                 return username
 
