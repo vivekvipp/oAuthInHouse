@@ -34,6 +34,7 @@ RUN pip install -r requirements.txt
 
 COPY . /code/
 RUN mkdir /code/staticfiles
+RUN mkdir /code/static
 
 COPY ./entrypoint-web.sh /entrypoint-web.sh
 RUN chmod +x /entrypoint-web.sh
