@@ -10,7 +10,7 @@ import re
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'email', 'mobile_no', 'is_active', 'is_blocked']
+        fields = ['id', 'email', 'mobile_no', 'is_active', 'is_blocked', 'old_id']
 
 
 def validate_mobile_no(value):
