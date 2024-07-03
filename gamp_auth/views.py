@@ -12,7 +12,7 @@ import logging
 
 from .models import User, OTP
 from .serializers import OTPSendSerializer, OTPVerifySerializer, UserSerializer, UserRegistrationSerializer
-from .utils import send_otp_via_sns, verify_otp_code, get_tokens_for_user
+from .utils import send_otp_via_sns, verify_otp_code, get_tokens_for_user, send_otp_via_email, send_blocked_email
 
 MAX_INCORRECT_ATTEMPTS = settings.MAX_INCORRECT_ATTEMPTS
 
@@ -54,7 +54,7 @@ def generate_otp(request):
             if latest_otp.is_valid():
                 return Response({'error': 'Previous OTP is still valid'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # OTP.objects.filter(user=user, is_used=False).update(is_used=True)  # Invalidate old OTPs
+        OTP.objects.filter(user=user, is_used=False).update(is_used=True)  # Invalidate old OTPs
 
         otp = OTP.objects.create(user=user)
 
@@ -62,6 +62,9 @@ def generate_otp(request):
         if mobile_no:
             response = send_otp_via_sns(mobile_no, otp.otp)
             logger.info(f'Sending OTP {otp.otp} to mobile {mobile_no}, SNS Response: {response}')
+        if email:
+            response = send_otp_via_email(email, otp.otp)
+            logger.info(f'Sending OTP {otp.otp} to email {email}, Email Response: {response}')
 
         return Response({'message': 'OTP sent'}, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -95,6 +98,8 @@ def verify_otp(request):
             user.incorrect_otp_attempts += 1
             if user.incorrect_otp_attempts >= MAX_INCORRECT_ATTEMPTS:
                 user.is_blocked = True
+                send_blocked_email(user.email)
+
             user.save()
             return Response({'error': 'Invalid OTP or expired'}, status=status.HTTP_400_BAD_REQUEST)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

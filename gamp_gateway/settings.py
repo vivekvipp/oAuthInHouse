@@ -69,7 +69,7 @@ ROOT_URLCONF = 'gamp_gateway.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -191,12 +191,20 @@ SIMPLE_JWT = {
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
     'TOKEN_TYPE_CLAIM': 'token_type',
 }
+EMAIL_HOST_USER = 'no_reply@gamp.gg'
 
-# SNS RELATED Settings
+# AWS SES & SNS RELATED Settings
 
 AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID', default=os.environ.get('AWS_ACCESS_KEY_ID'))
 AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY', default=os.environ.get('AWS_SECRET_ACCESS_KEY'))
 AWS_REGION_NAME = config('AWS_REGION_NAME', 'ap-south-1')
+
+EMAIL_BACKEND = 'django_ses.SESBackend'
+AWS_SES_REGION_NAME = AWS_REGION_NAME
+AWS_SES_REGION_ENDPOINT = f'email.{AWS_REGION_NAME}.amazonaws.com'
+
+
+DISCORD_URL = config('DISCORD_URL', default=os.environ.get('DISCORD_URL'))
 
 if ENVIRONMENT == 'production':
     from .production_settings import *
