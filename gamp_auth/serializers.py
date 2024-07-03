@@ -30,11 +30,9 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if not data.get('email') and not data.get('mobile_no'):
             raise ValidationError("At least one of email or mobile_no must be provided.")
-
-        if User.objects.filter(email=data.get('email')).exists():
+        elif User.objects.filter(email=data.get('email')).exists():
             raise ValidationError("A user with this email already exists.")
-
-        if User.objects.filter(mobile_no=data.get('mobile_no')).exists():
+        elif User.objects.filter(mobile_no=data.get('mobile_no')).exists():
             raise ValidationError("A user with this mobile number already exists.")
 
         return data
