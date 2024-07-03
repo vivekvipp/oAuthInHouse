@@ -5,6 +5,9 @@ from django.utils import timezone
 import random
 from .redis_connection import RedisConnection
 from django.conf import settings
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class UserManager(BaseUserManager):
@@ -81,9 +84,12 @@ class OTP(models.Model):
         self.set_otp_in_redis()
 
     def set_otp_in_redis(self):
-        r = RedisConnection().get_redis_connection()
-        r.setex(f'otp:{self.otp}', 120, self.user.id)
-        r.publish(settings.REDIS_OTP_CHANNEL, self.otp)
+        try:
+            r = RedisConnection().get_redis_connection()
+            r.setex(f'otp:{self.otp}', 120, self.user.id)
+            r.publish(settings.REDIS_OTP_CHANNEL, self.otp)
+        except Exception as e:
+            logger.error(f"Error setting OTP in Redis: {e}")
 
     def is_valid(self):
         return not self.is_used and (timezone.now() - self.created_at).seconds < 120
