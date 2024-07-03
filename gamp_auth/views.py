@@ -54,7 +54,7 @@ def generate_otp(request):
             if latest_otp.is_valid():
                 return Response({'error': 'Previous OTP is still valid'}, status=status.HTTP_400_BAD_REQUEST)
 
-        OTP.objects.filter(user=user, is_used=False).update(is_used=True)  # Invalidate old OTPs
+        # OTP.objects.filter(user=user, is_used=False).update(is_used=True)  # Invalidate old OTPs
 
         otp = OTP.objects.create(user=user)
 
