@@ -35,9 +35,9 @@ RUN pip install -r requirements.txt
 COPY . /code/
 RUN mkdir /code/staticfiles
 
-COPY ./entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+COPY ./entrypoint-web.sh /entrypoint.sh
+RUN chmod +x /entrypoint-web.sh
 
 EXPOSE 8000
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/entrypoint-web.sh"]
