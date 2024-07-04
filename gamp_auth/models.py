@@ -95,3 +95,15 @@ class OTP(models.Model):
 
     def is_valid(self):
         return not self.is_used and (timezone.now() - self.created_at).seconds < 120
+
+
+class OTPLog(models.Model):
+    mobile_no = models.CharField(max_length=15)
+    otp = models.CharField(max_length=6)
+    message_id = models.CharField(max_length=100)
+    status = models.CharField(max_length=50)
+    response_metadata = models.JSONField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.mobile_no} - {self.otp} - {self.status}"

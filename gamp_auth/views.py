@@ -31,6 +31,20 @@ def register_user(request):
     if extra_fields:
         return Response({"error": f"No extra fields are allowed: {', '.join(extra_fields)}"},
                         status=status.HTTP_400_BAD_REQUEST)
+
+    email, mobile_no = data.get('email'), data.get('mobile_no')
+    user = None
+    if email:
+        user = User.objects.filter(email=data.get).first()
+    elif mobile_no:
+        user = User.objects.filter(mobile_no=mobile_no).first()
+    elif email and mobile_no:
+        user = User.objects.filter(email=email, mobile_no=mobile_no).first()
+
+    if user:
+        return Response({'error': 'User with this email or mobile number already exists'},
+                        status=status.HTTP_400_BAD_REQUEST)
+
     serializer = UserRegistrationSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.save()
@@ -51,9 +65,12 @@ def generate_otp(request):
         user = None
 
         if email:
-            user, created = User.objects.get_or_create(email=email)
+            user = User.objects.filter(email=email).first()
         elif mobile_no:
-            user, created = User.objects.get_or_create(mobile_no=mobile_no)
+            user = User.objects.filter(mobile_no=mobile_no).first()
+
+        if not user:
+            return Response({'error': 'User with this email does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
         if user.is_blocked:
             return Response({'error': 'User is blocked due to multiple incorrect OTP attempts'},

@@ -1,10 +1,14 @@
 import boto3
 from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import OTP
+from .models import OTP, OTPLog
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from .redis_connection import RedisConnection
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def send_otp_via_sns(mobile_no, otp):
@@ -25,6 +29,17 @@ def send_otp_via_sns(mobile_no, otp):
         PhoneNumber=mobile_no,
         Message=f'Your gamp one time passcode is {otp}'
     )
+    try:
+        # Create an OTPLog entry based on the response
+        OTPLog.objects.create(
+            mobile_no=mobile_no,
+            otp=otp,
+            message_id=response.get('MessageId'),
+            status=response['ResponseMetadata'].get('HTTPStatusCode'),
+            response_metadata=response['ResponseMetadata']
+        )
+    except Exception as e:
+        logger.error(f"Error creating OTPLog entry: {e}")
     return response
 
 

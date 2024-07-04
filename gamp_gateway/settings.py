@@ -266,6 +266,12 @@ AWS_SES_REGION_ENDPOINT = f'email.{AWS_REGION_NAME}.amazonaws.com'
 
 DISCORD_URL = config('REJOIN_TRAIL_URL', default=os.environ.get('REJOIN_TRAIL_URL', 'https://discord.gg/gamp'))
 
+
+# ADMIN USER CONF
+ADMIN_USER_EMAIL = config('ADMIN_USER_EMAIL', default=os.environ.get('ADMIN_USER_EMAIL', "durga@auranft.co"))
+ADMIN_USER_PASSWORD = config('ADMIN_USER_PASSWORD', default=os.environ.get('ADMIN_USER_PASSWORD', "admin@123"))
+ADMIN_USER_MOBILE = config('ADMIN_USER_MOBILE', default=os.environ.get('ADMIN_USER_MOBILE', "+919501834216"))
+
 if ENVIRONMENT == 'production':
     from .production_settings import *
 elif ENVIRONMENT == 'development':

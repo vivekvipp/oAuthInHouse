@@ -3,7 +3,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import Group
-from .models import User, OTP
+from .models import User, OTP, OTPLog
 from .forms import CustomUserCreationForm, CustomUserChangeForm
 
 
@@ -42,4 +42,11 @@ class OTPAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'otp')
 
 
+class OTPLogAdmin(admin.ModelAdmin):
+    list_display = ('mobile_no', 'otp', 'message_id', 'status')
+    list_filter = ('status',)
+    search_fields = ('mobile_no', 'otp')
+
+
 admin.site.register(OTP, OTPAdmin)
+admin.site.register(OTPLog, OTPLogAdmin)
