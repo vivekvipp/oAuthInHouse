@@ -1,41 +1,58 @@
+import logging
 from celery import shared_task
+from django.db.models import Q
 from .models import OTP, User
 from .redis_connection import RedisConnection
 
-import logging
-
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)  # Set to DEBUG to capture all logs
-handler = logging.StreamHandler()
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-handler.setFormatter(formatter)
-logger.addHandler(handler)
 
 
 @shared_task
 def mark_expired_otps_inactive():
+    redis_conn = RedisConnection()
+
     try:
-        r = RedisConnection().get_redis_connection()
+        r = redis_conn.get_redis_connection()
         otp_keys = r.keys('otp:*')
 
         for key in otp_keys:
-            otp_code = key.decode('utf-8').split(':')[1]
-            stored_user_id = r.get(key)
-
-            if isinstance(stored_user_id, bytes):
-                stored_user_id = stored_user_id.decode('utf-8')
-            elif isinstance(stored_user_id, str):
-                stored_user_id = int(stored_user_id)
-
-            if not stored_user_id:
-                user_obj = User.objects.filter(id=stored_user_id)
-                if user_obj.count() > 1:
-                    user_first = user_obj.first()
-                    otp = OTP.objects.filter(otp=otp_code, user=user_first, is_used=False).first()
-                    if otp:
-                        otp.is_used = True
-                        otp.save()
-                        r.delete(key)
-                logger.warn(f"User with ID {stored_user_id} not found in the database")
+            process_otp_key(r, key)
     except Exception as e:
-        logger.error(f"Redis connection failed: {e}")
+        logger.error(f"Error in mark_expired_otps_inactive task: {e}", exc_info=True)
+
+
+def process_otp_key(redis_client, key):
+    try:
+        otp_code = key.decode('utf-8').split(':')[1]
+        stored_user_id = get_stored_user_id(redis_client, key)
+
+        if not stored_user_id:
+            logger.warning(f"No user ID found for OTP: {otp_code}")
+            return
+
+        user = User.objects.filter(id=stored_user_id).first()
+        if not user:
+            logger.warning(f"User with ID {stored_user_id} not found in the database")
+            return
+
+        otp = OTP.objects.filter(Q(otp=otp_code) & Q(user=user) & Q(is_used=False)).first()
+        if otp:
+            otp.is_used = True
+            otp.save()
+            redis_client.delete(key)
+            logger.info(f"Marked OTP {otp_code} as used for user {user.id}")
+        else:
+            logger.info(f"No active OTP found for user {user.id} with code {otp_code}")
+
+    except Exception as e:
+        logger.error(f"Error processing OTP key {key}: {e}", exc_info=True)
+
+
+def get_stored_user_id(redis_client, key):
+    stored_user_id = redis_client.get(key)
+    if isinstance(stored_user_id, bytes):
+        return stored_user_id.decode('utf-8')
+    elif isinstance(stored_user_id, str):
+        return int(stored_user_id)
+    return None
+

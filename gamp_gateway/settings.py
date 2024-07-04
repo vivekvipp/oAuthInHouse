@@ -212,6 +212,7 @@ REDIS_DB = config('REDIS_DB', default=os.environ.get('REDIS_DB'), cast=int)
 REDIS_OTP_CHANNEL = config('REDIS_OTP_CHANNEL', default=os.environ.get('REDIS_OTP_CHANNEL'))
 REDIS_PASSWORD = config('REDIS_PASSWORD', default=os.environ.get('REDIS_PASSWORD'))
 REDIS_TLS = config('REDIS_TLS', default=os.environ.get('REDIS_TLS'))
+REDIS_CONNECTION_POOL = config('REDIS_CONNECTION_POOL', default=os.environ.get('REDIS_CONNECTION_POOL', 10), cast=int)
 
 
 # Redis settings for caching

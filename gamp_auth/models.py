@@ -87,9 +87,9 @@ class OTP(models.Model):
 
     def set_otp_in_redis(self):
         try:
-            r = RedisConnection().get_redis_connection()
-            r.setex(f'otp:{self.otp}', 120, str(self.user.id))
-            r.publish(settings.REDIS_OTP_CHANNEL, self.otp)
+            redis_conn = RedisConnection()
+            redis_conn.setex(f'otp:{self.otp}', 120, str(self.user.id))
+            redis_conn.publish(settings.REDIS_OTP_CHANNEL, self.otp)
         except Exception as e:
             logger.error(f"Error setting OTP in Redis: {e}")
 
