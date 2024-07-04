@@ -105,5 +105,10 @@ class OTPLog(models.Model):
     response_metadata = models.JSONField()
     timestamp = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ['-timestamp']
+        verbose_name = 'OTP Log'
+        verbose_name_plural = 'OTP Logs'
+
     def __str__(self):
         return f"{self.mobile_no} - {self.otp} - {self.status}"
