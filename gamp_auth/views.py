@@ -35,7 +35,8 @@ def register_user(request):
     email, mobile_no = data.get('email'), data.get('mobile_no')
     user = None
     if email:
-        user = User.objects.filter(email=data.get).first()
+        email = email.lower()
+        user = User.objects.filter(email=email).first()
     elif mobile_no:
         user = User.objects.filter(mobile_no=mobile_no).first()
     elif email and mobile_no:
