@@ -208,7 +208,16 @@ def unblock_users(request):
     if not user:
         return Response({'error': 'Blocked user not found'}, status=status.HTTP_404_NOT_FOUND)
     if is_deletion:
-        User.objects.filter(email=email, mobile_no=mobile_no).delete()
+        user_deleted = None
+        if email:
+            user_deleted = User.objects.filter(email=email).first()
+        if mobile_no:
+            user_deleted = User.objects.filter(mobile_no=mobile_no).first()
+        if email and mobile_no:
+            user_deleted = User.objects.filter(email=email, mobile_no=mobile_no).first()
+        if not user_deleted:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        user_deleted.delete()
         return Response({'message': 'Requested user is deleted'}, status=status.HTTP_200_OK)
     user.update(is_blocked=False, incorrect_otp_attempts=0)
     return Response({'message': 'User is unblocked'}, status=status.HTTP_200_OK)
