@@ -180,3 +180,31 @@ def verify_access_token(request):
         tb = traceback.format_exc()
         logger.info(tb)
         return Response({'error': 'Token is invalid or expired'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+@authentication_classes([JWTAuthentication])
+def unblock_users(request):
+    if settings.ENVIRONMENT != 'development':
+        return Response({'error': 'This endpoint is only available in development environment'},
+                        status=status.HTTP_403_FORBIDDEN)
+    data = request.data
+    email = data.get('email')
+    mobile_no = data.get('mobile_no')
+    is_deletion = data.get('is_deletion', False)
+    if is_deletion:
+        User.objects.filter(email=email, mobile_no=mobile_no).delete()
+        return Response({'message': 'Requested user is deleted'}, status=status.HTTP_200_OK)
+    user = None
+    if email:
+        email = email.lower()
+        user = User.objects.filter(email=email, is_blocked=True)
+    if mobile_no:
+        user = User.objects.filter(mobile_no=mobile_no, is_blocked=True)
+    if email and mobile_no:
+        user = User.objects.filter(email=email, mobile_no=mobile_no, is_blocked=True)
+    if not user:
+        return Response({'error': 'Blocked user not found'}, status=status.HTTP_404_NOT_FOUND)
+    user.update(is_blocked=False, incorrect_otp_attempts=0)
+    return Response({'message': 'User is unblocked'}, status=status.HTTP_200_OK)
