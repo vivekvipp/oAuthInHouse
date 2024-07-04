@@ -251,7 +251,7 @@ SIMPLE_JWT = {
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
     'TOKEN_TYPE_CLAIM': 'token_type',
 }
-EMAIL_HOST_USER = 'no_reply@gamp.gg'
+EMAIL_HOST_USER = 'no-reply@gamp.gg'
 
 # AWS SES & SNS RELATED Settings
 
