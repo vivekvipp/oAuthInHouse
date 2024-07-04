@@ -272,6 +272,9 @@ ADMIN_USER_EMAIL = config('ADMIN_USER_EMAIL', default=os.environ.get('ADMIN_USER
 ADMIN_USER_PASSWORD = config('ADMIN_USER_PASSWORD', default=os.environ.get('ADMIN_USER_PASSWORD', "admin@123"))
 ADMIN_USER_MOBILE = config('ADMIN_USER_MOBILE', default=os.environ.get('ADMIN_USER_MOBILE', "+919501834216"))
 
+ADMIN_API_TOKEN = config('ADMIN_API_TOKEN', default=os.environ.get('ADMIN_API_TOKEN',
+                                                                   "492794d0-bf47-404d-975e-28473c21efa3"))
+
 if ENVIRONMENT == 'production':
     from .production_settings import *
 elif ENVIRONMENT == 'development':

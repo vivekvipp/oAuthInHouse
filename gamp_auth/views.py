@@ -183,9 +183,13 @@ def verify_access_token(request):
 
 
 @api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
-@authentication_classes([JWTAuthentication])
+@permission_classes([permissions.AllowAny])
+@authentication_classes([])
 def unblock_users(request):
+    api_token = request.headers.get('x-api-token')
+    if not api_token or api_token != settings.UNBLOCK_API_TOKEN:
+        return Response({'error': 'x-api-token header missing or wrong'}, status=status.HTTP_400_BAD_REQUEST)
+
     if settings.ENVIRONMENT != 'development':
         return Response({'error': 'This endpoint is only available in development environment'},
                         status=status.HTTP_403_FORBIDDEN)
