@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.contrib.auth import login
+from django.contrib.auth import login, get_user_model
 from rest_framework import status, permissions
 from rest_framework.permissions import AllowAny
 from django.views.decorators.csrf import csrf_exempt
@@ -18,6 +18,7 @@ from .utils import send_otp_via_sns, verify_otp_code, get_tokens_for_user, send_
 MAX_INCORRECT_ATTEMPTS = settings.MAX_INCORRECT_ATTEMPTS
 
 logger = logging.getLogger(__file__)
+user_model = get_user_model()
 
 
 @api_view(['POST'])
@@ -193,32 +194,34 @@ def unblock_users(request):
     if settings.ENVIRONMENT != 'development':
         return Response({'error': 'This endpoint is only available in development environment'},
                         status=status.HTTP_403_FORBIDDEN)
+
     data = request.data
-    email = data.get('email')
+    email = data.get('email', '').lower()
     mobile_no = data.get('mobile_no')
     is_deletion = data.get('is_deletion', False)
-    if is_deletion:
-        user_deleted = None
-        if email:
-            user_deleted = User.objects.filter(email=email).first()
-        if mobile_no:
-            user_deleted = User.objects.filter(mobile_no=mobile_no).first()
-        if email and mobile_no:
-            user_deleted = User.objects.filter(email=email, mobile_no=mobile_no).first()
-        if not user_deleted:
-            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-        user_deleted.delete()
-        return Response({'message': 'Requested user is deleted'}, status=status.HTTP_200_OK)
-    user = None
-    if email:
-        email = email.lower()
-        user = User.objects.filter(email=email, is_blocked=True)
-    if mobile_no:
-        user = User.objects.filter(mobile_no=mobile_no, is_blocked=True)
-    if email and mobile_no:
-        user = User.objects.filter(email=email, mobile_no=mobile_no, is_blocked=True)
-    if not user:
-        return Response({'error': 'Blocked user not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    user.update(is_blocked=False, incorrect_otp_attempts=0)
-    return Response({'message': 'User is unblocked'}, status=status.HTTP_200_OK)
+    if not email and not mobile_no:
+        return Response({'error': 'Email or mobile number must be provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+    user_filter = {}
+    if email:
+        user_filter['email'] = email
+    if mobile_no:
+        user_filter['mobile_no'] = mobile_no
+
+    user = user_model.objects.filter(**user_filter).first()
+
+    if not user:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if is_deletion:
+        user.delete()
+        return Response({'message': 'Requested user is deleted'}, status=status.HTTP_200_OK)
+
+    if user.is_blocked:
+        user.is_blocked = False
+        user.incorrect_otp_attempts = 0
+        user.save()
+        return Response({'message': 'User is unblocked'}, status=status.HTTP_200_OK)
+
+    return Response({'error': 'User is not blocked'}, status=status.HTTP_400_BAD_REQUEST)
