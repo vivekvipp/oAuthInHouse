@@ -1,10 +1,12 @@
 from django.conf import settings
 from django.contrib.auth import login, get_user_model
+from django.core.files.storage import default_storage
 from rest_framework import status, permissions
 from rest_framework.permissions import AllowAny
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework.decorators import api_view, permission_classes, authentication_classes, parser_classes
 from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import AccessToken
@@ -225,3 +227,50 @@ def unblock_users(request):
         return Response({'message': 'User is unblocked'}, status=status.HTTP_200_OK)
 
     return Response({'error': 'User is not blocked'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+@parser_classes([MultiPartParser, FormParser])
+def upload_users(request):
+    api_token = request.headers.get('x-api-token')
+    if not api_token or api_token != settings.ADMIN_API_TOKEN:
+        return Response({'error': 'x-api-token header missing or wrong'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if 'file' not in request.FILES:
+        return Response({'error': 'No file provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+    file = request.FILES['file']
+    file_path = default_storage.save('tmp/' + file.name, file)
+    with default_storage.open(file_path) as f:
+        data = json.load(f)
+
+    users_created = 0
+    import uuid
+    for user_data in data:
+        user = User(
+            email=user_data['email'],
+            mobile_no=user_data['phone'],
+            username=str(uuid.uuid4()),
+            is_active=not user_data['is_deleted'],
+            old_id=user_data['_id']['$oid']
+        )
+        try:
+            user.save()
+            users_created += 1
+        except Exception as e:
+            filter_kwargs = {}
+            if user_data.get('email'):
+                filter_kwargs['email'] = user.email
+            if user_data.get('mobile_no'):
+                filter_kwargs['mobile_no'] = user.mobile_no
+            existing_user = User.objects.filter(**filter_kwargs).first()
+            if existing_user:
+                existing_user.username = user.username
+                existing_user.save()
+                users_created += 1
+            else:
+                logger.error(f"Error creating user: {e}")
+                continue
+
+    return Response({'message': f'{users_created} users imported successfully'}, status=status.HTTP_201_CREATED)
