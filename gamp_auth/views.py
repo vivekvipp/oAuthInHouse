@@ -11,6 +11,7 @@ from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import AccessToken
 import logging
+import json
 import traceback
 
 from .models import User, OTP
