@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
 from .views import generate_otp, verify_otp, get_user_details, verify_access_token, register_user, unblock_users, \
-    upload_users
+    upload_users, ping
 
 urlpatterns = [
     path('generate-otp/', generate_otp, name='generate_otp'),
@@ -12,5 +12,6 @@ urlpatterns = [
     path('register/', register_user, name='register_user'),
     path('unblock-users/', unblock_users, name='unblock_users'),
     path('upload-users/', upload_users, name='upload_users'),
+    path('ping/', ping, name='ping'),
 
 ]

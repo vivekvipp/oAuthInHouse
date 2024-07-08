@@ -24,6 +24,12 @@ logger = logging.getLogger(__file__)
 user_model = get_user_model()
 
 
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def ping(request):
+    return Response({'message': 'Pong'}, status=status.HTTP_200_OK)
+
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register_user(request):
