@@ -238,8 +238,10 @@ CACHES = {
 
 MAX_INCORRECT_ATTEMPTS = config('MAX_INCORRECT_ATTEMPTS', 4)
 
+# 1 Week in minutes
+ACCESS_TOKEN_EXPIRY = config('ACCESS_TOKEN_EXPIRY', 10080, cast=int)
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=ACCESS_TOKEN_EXPIRY),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,
