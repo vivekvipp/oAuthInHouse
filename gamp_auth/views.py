@@ -177,13 +177,7 @@ def verify_access_token(request):
         access_token = AccessToken(token)
         user_id = access_token[settings.SIMPLE_JWT['USER_ID_CLAIM']]
         logger.debug(f"User ID: {user_id}")
-        user = User.objects.filter(id=user_id).first()
-        if not user:
-            logger.error(f"User with ID {user_id} not found")
-            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-        user_serialized_data = UserSerializer(user).data
-        logger.debug("Token is valid")
-        return Response({'message': 'Token is valid', 'data': user_serialized_data}, status=status.HTTP_200_OK)
+        return Response({'message': 'Token is valid', 'data': user_id}, status=status.HTTP_200_OK)
     except (InvalidToken, TokenError) as e:
         logger.error(f"Invalid token: {str(e)}")
         # get traceback
